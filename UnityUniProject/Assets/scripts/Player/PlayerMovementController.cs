@@ -9,30 +9,24 @@ public class PlayerMovementController : MonoBehaviour
 
     [Header("Camera")]
     public Transform cameraPivot;
-    public float mouseSensitivity = 0.15f;
+    public float mouseSensitivity = 2f;
     private float pitch = 0f;
 
     [Header("Movement")]
-    public float moveSpeed = 8f;
+    public float moveSpeed = 7f;
+    public float jumpForce = 8f;
 
-    [Header("Planet Gravity")]
+    [Header("Gravity")]
     public Transform planet;
     public float gravityStrength = 30f;
-    public float jumpForce = 12f;
 
-    // Ground check distance = (CC height / 2) + small offset
-    private float groundCheckDistance;
-    private bool isGroundedCustom;
-
+    private bool isGrounded;
     private float verticalVelocity = 0f;
 
     private void Awake()
     {
         _input = new PlayerMovementInput();
         cc = GetComponent<CharacterController>();
-
-        // Based on your CC height = 2
-        groundCheckDistance = (cc.height / 2f) + 0.3f;
     }
 
     private void OnEnable() => _input.Enable();
@@ -52,82 +46,98 @@ public class PlayerMovementController : MonoBehaviour
         Look(lookInput);
         GroundCheck();
         ApplyGravityAndJump();
-        AlignToPlanetSurface();
+        AlignToPlanet();
         Move(moveInput);
     }
 
-    // LOOK
+    // CAMERA LOOK 
     private void Look(Vector2 input)
     {
+        // Horizontal rotation
         transform.Rotate(Vector3.up * input.x);
 
+        // Vertical camera rotation
         pitch -= input.y;
         pitch = Mathf.Clamp(pitch, -80f, 80f);
-
         cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
-    // CUSTOM GROUND CHECK (planet-based)
+    // GROUND CHECK (CAPSULE CAST) 
     private void GroundCheck()
     {
-        Vector3 toPlanet = (planet.position - transform.position).normalized;
-        Ray ray = new Ray(transform.position, toPlanet);
-        isGroundedCustom = Physics.Raycast(ray, groundCheckDistance);
+        Vector3 up = (transform.position - planet.position).normalized;
+        Vector3 down = -up;
+
+        float r = cc.radius - 0.05f;
+        Vector3 center = transform.position + cc.center;
+
+        Vector3 p1 = center + up * (cc.height * 0.5f - r);
+        Vector3 p2 = center - up * (cc.height * 0.5f - r);
+
+        // Larger distance so uneven terrain still registers grounding
+        isGrounded = Physics.CapsuleCast(p1, p2, r, down, out _, 0.3f);
     }
 
-    // GRAVITY + JUMP
+    // GRAVITY + JUMP 
     private void ApplyGravityAndJump()
     {
         Vector3 up = (transform.position - planet.position).normalized;
 
-        if (isGroundedCustom)
+        if (isGrounded)
         {
-            // Reset downward velocity when grounded
-            verticalVelocity = 0f;
+            // Reset vertical force when landed
+            verticalVelocity = -2f;
 
             // Jump input
             if (_input.PlayerActionMap.Jump.WasPressedThisFrame())
             {
-                verticalVelocity = -jumpForce; // opposite of gravity
+                // Boost helps counter steep slopes
+                verticalVelocity = -jumpForce * 0.7f;
             }
         }
         else
         {
-            // Add gravity over time
-            verticalVelocity += gravityStrength * Time.deltaTime;
+            // Softer gravity so steep slopes aren't too strong
+            verticalVelocity += gravityStrength * 0.6f * Time.deltaTime;
         }
     }
 
-    
-    // MOVEMENT (tangent to planet)
+    // MOVEMENT 
     private void Move(Vector2 input)
     {
         Vector3 up = (transform.position - planet.position).normalized;
 
-        // Tangent vectors
+        // Project movement onto planet surface
         Vector3 forward = Vector3.ProjectOnPlane(transform.forward, up).normalized;
         Vector3 right   = Vector3.ProjectOnPlane(transform.right,   up).normalized;
 
-        // Horizontal move
-        Vector3 moveHorizontal = (forward * input.y + right * input.x) * moveSpeed;
+        // Basic horizontal movement
+        Vector3 move = (forward * input.y + right * input.x) * moveSpeed;
 
-        // Vertical move along gravity axis
-        Vector3 moveVertical = -up * verticalVelocity;
+        // Light slope sticking to prevent sliding
+        if (isGrounded)
+            move += -up * 1.5f;
 
-        // Combine and move
-        Vector3 finalMove = moveHorizontal + moveVertical;
+        // Boost to climb out of craters
+        float slopeDot = Vector3.Dot(move.normalized, -up);
+        if (slopeDot > 0.4f)
+            move += (-up * slopeDot * 4f);
 
-        cc.Move(finalMove * Time.deltaTime);
+        // Vertical gravity + jump
+        Vector3 verticalMove = -up * verticalVelocity;
+
+        cc.Move((move + verticalMove) * Time.deltaTime);
     }
-    
-    // ALIGN PLAYER UPRIGHT
-    private void AlignToPlanetSurface()
+
+    // ALIGN PLAYER TO PLANET NORMAL
+    private void AlignToPlanet()
     {
         Vector3 up = (transform.position - planet.position).normalized;
 
-        Quaternion currentRot = transform.rotation;
-        Quaternion tilt = Quaternion.FromToRotation(currentRot * Vector3.up, up);
+        Quaternion current = transform.rotation;
+        Quaternion target = Quaternion.FromToRotation(current * Vector3.up, up) * current;
 
-        transform.rotation = Quaternion.Slerp(currentRot, tilt * currentRot, Time.deltaTime * 6f);
+        // Smooth rotation
+        transform.rotation = Quaternion.Slerp(current, target, Time.deltaTime * 6f);
     }
 }
