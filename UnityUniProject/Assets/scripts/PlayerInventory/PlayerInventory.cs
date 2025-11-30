@@ -13,9 +13,7 @@ public class PlayerInventory : MonoBehaviour
     public bool hasPickaxe = false;
     public GameObject pickaxeModel;
 
-    // =============================
     // QUICKBAR (3 SLOTS)
-    // =============================
     [Header("Quickbar Slots")]
     public string[] quickSlots = new string[3];
 
@@ -23,9 +21,7 @@ public class PlayerInventory : MonoBehaviour
     public int selectedSlot = 0;   // 0 = Slot1, 1 = Slot2, 2 = Slot3
 
 
-    // =============================
     // QUICKBAR FUNCTIONS
-    // =============================
 
     // Put an item in a slot
     public void AssignToSlot(int slot, string item)
@@ -56,18 +52,14 @@ public class PlayerInventory : MonoBehaviour
     }
 
 
-    // =============================
     // MONEY
-    // =============================
     public void AddMoney(int amount)
     {
         money += amount;
     }
 
 
-    // =============================
     // PICKAXE
-    // =============================
     public void GivePickaxe()
     {
         hasPickaxe = true;
@@ -83,9 +75,7 @@ public class PlayerInventory : MonoBehaviour
     }
 
 
-    // =============================
     // ORE FUNCTIONS
-    // =============================
     public void AddOreChunk(string oreName, int amount)
     {
         if (!oreChunks.ContainsKey(oreName))
@@ -114,11 +104,8 @@ public class PlayerInventory : MonoBehaviour
         if (oreChunks[oreName] < 0)
             oreChunks[oreName] = 0;
     }
-
-
-    // =============================
+    
     // SELLING
-    // =============================
     public void SellOre(string oreName, int amount, int pricePerChunk)
     {
         if (!oreChunks.ContainsKey(oreName) || oreChunks[oreName] < amount)

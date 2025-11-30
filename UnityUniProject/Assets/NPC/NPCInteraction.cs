@@ -89,7 +89,7 @@ public class NPCInteraction : MonoBehaviour
         }
     }
 
-    // Called by a “Close” button (Optional)
+    // Called by a “Close” button
     public void CloseMenu()
     {
         if (npcMenu != null)
