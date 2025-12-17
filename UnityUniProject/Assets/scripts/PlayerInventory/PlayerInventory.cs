@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
 {
-    [Header("Money")]
-    public int money = 0;
-
     [Header("Pickaxe")]
     public bool hasPickaxe = false;
     public GameObject pickaxeModel;   // Assign the pickaxe model in the inspector
@@ -24,12 +21,8 @@ public class PlayerInventory : MonoBehaviour
         if (pickaxeModel != null)
             pickaxeModel.SetActive(true);
 
-        Debug.Log("Player received pickaxe.");
-    }
-
-    // Optional — add money
-    public void AddMoney(int amount)
-    {
-        money += amount;
+        Debug.Log("Player received pickaxe."); // This was used to figure out an issue with the player not getting the pickaxe
     }
 }
+
+

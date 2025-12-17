@@ -64,7 +64,7 @@ public class NPCInteraction : MonoBehaviour
         }
     }
 
-    // --- Menu Control Functions ---
+    // Menu control functions 
 
     public void OpenMenu()
     {

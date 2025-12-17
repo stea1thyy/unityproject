@@ -40,7 +40,7 @@ public class PlayerMovementController : MonoBehaviour
             return; 
         }
 
-        // If UI is NOT active, ensure the cursor is locked for gameplay.
+        // If UI is not active, ensure the cursor is locked for gameplay.
         if (Cursor.lockState != CursorLockMode.Locked)
         {
              Cursor.lockState = CursorLockMode.Locked;
@@ -66,7 +66,7 @@ public class PlayerMovementController : MonoBehaviour
         cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
-    // GROUND CHECK (CAPSULE CAST) 
+    // GROUND CHECK
     private void GroundCheck()
     {
         Vector3 up = (transform.position - planet.position).normalized;
