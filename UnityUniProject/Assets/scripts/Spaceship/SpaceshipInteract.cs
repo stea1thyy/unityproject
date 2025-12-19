@@ -5,21 +5,26 @@ public class SpaceshipInteract : MonoBehaviour
     public SpaceshipUIController spaceshipUI;
     public GameObject pressEPrompt;
 
-    private bool playerInRange = false;
+    // Tracks whether the player is inside the trigger
+    bool playerInRange = false;
 
     void Start()
     {
-        pressEPrompt.SetActive(false);
+        // Hide the prompt by default
+        if (pressEPrompt != null)
+            pressEPrompt.SetActive(false);
     }
 
-// The code bellow is used to trigger a panel thats in the game.
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player"))
             return;
 
+        // Player entered the spaceship area
         playerInRange = true;
-        pressEPrompt.SetActive(true);
+
+        if (pressEPrompt != null)
+            pressEPrompt.SetActive(true);
     }
 
     void OnTriggerExit(Collider other)
@@ -27,15 +32,28 @@ public class SpaceshipInteract : MonoBehaviour
         if (!other.CompareTag("Player"))
             return;
 
+        // Player left the spaceship area
         playerInRange = false;
-        pressEPrompt.SetActive(false);
+
+        if (pressEPrompt != null)
+            pressEPrompt.SetActive(false);
     }
 
     void Update()
     {
+        // Don't do anything if the player isn't nearby
         if (!playerInRange)
             return;
 
+        // If the prompt isn't visible, this interact shouldn't fire
+        if (pressEPrompt == null || !pressEPrompt.activeSelf)
+            return;
+
+        // Block interaction if another UI is already open
+        if (PopUpManager.IsAnyUIAcive)
+            return;
+
+        // Open the spaceship UI
         if (Input.GetKeyDown(KeyCode.E))
         {
             pressEPrompt.SetActive(false);
