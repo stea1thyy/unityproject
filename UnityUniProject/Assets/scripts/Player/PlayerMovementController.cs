@@ -34,17 +34,22 @@ public class PlayerMovementController : MonoBehaviour
 
     private void Update()
     {
-        // If the global UI flag is active, stop all input/movement.
-        if (PopUpManager.IsAnyUIAcive)
+        // Open journal with I (always allowed)
+        if (_input.PlayerActionMap.Journal.WasPressedThisFrame())
         {
-            return; 
+            OreJournalUI.Instance.Open();
+            return;
         }
 
-        // If UI is not active, ensure the cursor is locked for gameplay.
+        // Stop movement while UI is open
+        if (PopUpManager.IsAnyUIAcive)
+            return;
+
+        // Lock cursor during gameplay
         if (Cursor.lockState != CursorLockMode.Locked)
         {
-             Cursor.lockState = CursorLockMode.Locked;
-             Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         Vector2 moveInput = _input.PlayerActionMap.PlayerMovement.ReadValue<Vector2>();
@@ -57,7 +62,6 @@ public class PlayerMovementController : MonoBehaviour
         Move(moveInput);
     }
 
-    // CAMERA LOOK 
     private void Look(Vector2 input)
     {
         transform.Rotate(Vector3.up * input.x);
@@ -66,11 +70,11 @@ public class PlayerMovementController : MonoBehaviour
         cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
-    // GROUND CHECK
     private void GroundCheck()
     {
         Vector3 up = (transform.position - planet.position).normalized;
         Vector3 down = -up;
+
         float r = cc.radius - 0.05f;
         Vector3 center = transform.position + cc.center;
         Vector3 p1 = center + up * (cc.height * 0.5f - r);
@@ -79,7 +83,6 @@ public class PlayerMovementController : MonoBehaviour
         isGrounded = Physics.CapsuleCast(p1, p2, r, down, out _, 0.3f);
     }
 
-    // GRAVITY + JUMP 
     private void ApplyGravityAndJump()
     {
         Vector3 up = (transform.position - planet.position).normalized;
@@ -88,9 +91,7 @@ public class PlayerMovementController : MonoBehaviour
         {
             verticalVelocity = -2f;
             if (_input.PlayerActionMap.Jump.WasPressedThisFrame())
-            {
                 verticalVelocity = -jumpForce * 0.7f;
-            }
         }
         else
         {
@@ -98,28 +99,21 @@ public class PlayerMovementController : MonoBehaviour
         }
     }
 
-    // MOVEMENT 
     private void Move(Vector2 input)
     {
         Vector3 up = (transform.position - planet.position).normalized;
         Vector3 forward = Vector3.ProjectOnPlane(transform.forward, up).normalized;
-        Vector3 right   = Vector3.ProjectOnPlane(transform.right,   up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(transform.right, up).normalized;
 
         Vector3 move = (forward * input.y + right * input.x) * moveSpeed;
 
         if (isGrounded)
             move += -up * 1.5f;
 
-        float slopeDot = Vector3.Dot(move.normalized, -up);
-        if (slopeDot > 0.4f)
-            move += (-up * slopeDot * 4f);
-
         Vector3 verticalMove = -up * verticalVelocity;
-
         cc.Move((move + verticalMove) * Time.deltaTime);
     }
 
-    // ALIGN PLAYER TO PLANET NORMAL
     private void AlignToPlanet()
     {
         Vector3 up = (transform.position - planet.position).normalized;

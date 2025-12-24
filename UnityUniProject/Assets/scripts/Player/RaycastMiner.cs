@@ -3,27 +3,22 @@ using UnityEngine;
 public class RaycastMiner : MonoBehaviour
 {
     [Header("Raycast Settings")]
-    public float maxDistance = 5f;        // How far we can mine
-    public LayerMask mineableLayers;       // What layers count as ore
+    public float maxDistance = 5f;
+    public LayerMask mineableLayers;
 
-    [Header("Ore Info UI")]
-    public GameObject oreInfoPanel;        // UI shown when aiming at ore
+    [Header("Ore Hint UI")]
+    public GameObject oreInfoPanel;    // optional small "aiming at ore" hint
 
     [Header("Player Reference")]
     public PlayerInventory playerInventory;
 
-    private OreData currentOreTarget;      // Ore currently hit by ray
+    OreData currentOreTarget;
 
     void Start()
     {
-        // Auto-find inventory if not set
         if (playerInventory == null)
             playerInventory = FindFirstObjectByType<PlayerInventory>();
 
-        if (playerInventory == null)
-            Debug.LogError("RaycastMiner: PlayerInventory NOT found in scene!");
-
-        // Hide UI on start
         if (oreInfoPanel != null)
             oreInfoPanel.SetActive(false);
     }
@@ -35,7 +30,7 @@ public class RaycastMiner : MonoBehaviour
 
         Debug.DrawRay(transform.position, transform.forward * maxDistance, Color.red);
 
-        // Don't mine while other UI is open
+        // If any UI is open (like ore info), don't mine
         if (PopUpManager.IsAnyUIAcive)
         {
             if (oreInfoPanel != null)
@@ -43,16 +38,13 @@ public class RaycastMiner : MonoBehaviour
             return;
         }
 
-        Ray ray = new Ray(transform.position, transform.forward);
-        RaycastHit hit;
-
         currentOreTarget = null;
 
         if (oreInfoPanel != null)
             oreInfoPanel.SetActive(false);
 
-        // Check for ore in front of player
-        if (Physics.Raycast(ray, out hit, maxDistance, mineableLayers))
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, transform.forward, out hit, maxDistance, mineableLayers))
         {
             currentOreTarget = hit.collider.GetComponent<OreData>();
 
@@ -61,12 +53,13 @@ public class RaycastMiner : MonoBehaviour
                 if (oreInfoPanel != null)
                     oreInfoPanel.SetActive(true);
 
-                // Need pickaxe to mine
                 if (!playerInventory.hasPickaxe)
                     return;
 
                 if (Input.GetMouseButtonDown(0))
-                    currentOreTarget.MineOre();
+                {
+                    currentOreTarget.Mine();
+                }
             }
         }
     }
