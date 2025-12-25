@@ -23,25 +23,26 @@ public class PlayerMovementController : MonoBehaviour
     private bool isGrounded;
     private float verticalVelocity = 0f;
 
-    private void Awake()
+    void Awake()
     {
+        // Input + controller setup
         _input = new PlayerMovementInput();
         cc = GetComponent<CharacterController>();
     }
 
-    private void OnEnable() => _input.Enable();
-    private void OnDisable() => _input.Disable();
+    void OnEnable() => _input.Enable();
+    void OnDisable() => _input.Disable();
 
-    private void Update()
+    void Update()
     {
-        // Open journal with I (always allowed)
+        // Journal key (always allowed)
         if (_input.PlayerActionMap.Journal.WasPressedThisFrame())
         {
             OreJournalUI.Instance.Open();
             return;
         }
 
-        // Stop movement while UI is open
+        // Block movement while menus are open
         if (PopUpManager.IsAnyUIAcive)
             return;
 
@@ -62,63 +63,81 @@ public class PlayerMovementController : MonoBehaviour
         Move(moveInput);
     }
 
-    private void Look(Vector2 input)
+    void Look(Vector2 input)
     {
+        // Yaw on player, pitch on camera
         transform.Rotate(Vector3.up * input.x);
+
         pitch -= input.y;
         pitch = Mathf.Clamp(pitch, -80f, 80f);
         cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
-    private void GroundCheck()
+    void GroundCheck()
     {
+        // Planet-based up/down
         Vector3 up = (transform.position - planet.position).normalized;
         Vector3 down = -up;
 
-        float r = cc.radius - 0.05f;
+        // Match CharacterController shape
+        float radius = cc.radius - 0.05f;
         Vector3 center = transform.position + cc.center;
-        Vector3 p1 = center + up * (cc.height * 0.5f - r);
-        Vector3 p2 = center - up * (cc.height * 0.5f - r);
 
-        isGrounded = Physics.CapsuleCast(p1, p2, r, down, out _, 0.3f);
+        Vector3 p1 = center + up * (cc.height * 0.5f - radius);
+        Vector3 p2 = center - up * (cc.height * 0.5f - radius);
+
+        // Small cast distance for stability
+        isGrounded = Physics.CapsuleCast(p1, p2, radius, down, out _, 0.3f);
     }
 
-    private void ApplyGravityAndJump()
+    void ApplyGravityAndJump()
     {
         Vector3 up = (transform.position - planet.position).normalized;
 
         if (isGrounded)
         {
+            // Stick to surface
             verticalVelocity = -2f;
+
+            // Jump away from planet
             if (_input.PlayerActionMap.Jump.WasPressedThisFrame())
                 verticalVelocity = -jumpForce * 0.7f;
         }
         else
         {
+            // Pull back toward planet
             verticalVelocity += gravityStrength * 0.6f * Time.deltaTime;
         }
     }
 
-    private void Move(Vector2 input)
+    void Move(Vector2 input)
     {
         Vector3 up = (transform.position - planet.position).normalized;
+
+        // Keep movement tangent to the surface
         Vector3 forward = Vector3.ProjectOnPlane(transform.forward, up).normalized;
         Vector3 right = Vector3.ProjectOnPlane(transform.right, up).normalized;
 
         Vector3 move = (forward * input.y + right * input.x) * moveSpeed;
 
+        // Extra push down helps on slopes
         if (isGrounded)
             move += -up * 1.5f;
 
+        // Vertical handled separately
         Vector3 verticalMove = -up * verticalVelocity;
+
         cc.Move((move + verticalMove) * Time.deltaTime);
     }
 
-    private void AlignToPlanet()
+    void AlignToPlanet()
     {
+        // Rotate player so feet point at planet
         Vector3 up = (transform.position - planet.position).normalized;
+
         Quaternion current = transform.rotation;
-        Quaternion target = Quaternion.FromToRotation(current * Vector3.up, up) * current;
+        Quaternion target =
+            Quaternion.FromToRotation(current * Vector3.up, up) * current;
 
         transform.rotation = Quaternion.Slerp(current, target, Time.deltaTime * 6f);
     }
