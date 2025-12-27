@@ -127,6 +127,15 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Volume"",
+                    ""type"": ""Button"",
+                    ""id"": ""9d21f178-dd08-4e13-af75-a4e4ebcc5b97"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -226,6 +235,17 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Journal"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6891724a-f405-475c-a815-412a7b462167"",
+                    ""path"": ""<Keyboard>/m"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Volume"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1083,6 +1103,7 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
         m_PlayerActionMap_Look = m_PlayerActionMap.FindAction("Look", throwIfNotFound: true);
         m_PlayerActionMap_Jump = m_PlayerActionMap.FindAction("Jump", throwIfNotFound: true);
         m_PlayerActionMap_Journal = m_PlayerActionMap.FindAction("Journal", throwIfNotFound: true);
+        m_PlayerActionMap_Volume = m_PlayerActionMap.FindAction("Volume", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
@@ -1186,6 +1207,7 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerActionMap_Look;
     private readonly InputAction m_PlayerActionMap_Jump;
     private readonly InputAction m_PlayerActionMap_Journal;
+    private readonly InputAction m_PlayerActionMap_Volume;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerActionMap".
     /// </summary>
@@ -1213,6 +1235,10 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerActionMap/Journal".
         /// </summary>
         public InputAction @Journal => m_Wrapper.m_PlayerActionMap_Journal;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerActionMap/Volume".
+        /// </summary>
+        public InputAction @Volume => m_Wrapper.m_PlayerActionMap_Volume;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1251,6 +1277,9 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
             @Journal.started += instance.OnJournal;
             @Journal.performed += instance.OnJournal;
             @Journal.canceled += instance.OnJournal;
+            @Volume.started += instance.OnVolume;
+            @Volume.performed += instance.OnVolume;
+            @Volume.canceled += instance.OnVolume;
         }
 
         /// <summary>
@@ -1274,6 +1303,9 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
             @Journal.started -= instance.OnJournal;
             @Journal.performed -= instance.OnJournal;
             @Journal.canceled -= instance.OnJournal;
+            @Volume.started -= instance.OnVolume;
+            @Volume.performed -= instance.OnVolume;
+            @Volume.canceled -= instance.OnVolume;
         }
 
         /// <summary>
@@ -1733,6 +1765,13 @@ public partial class @PlayerMovementInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnJournal(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Volume" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnVolume(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Player" which allows adding and removing callbacks.

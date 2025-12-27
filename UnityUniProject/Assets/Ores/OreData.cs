@@ -9,6 +9,10 @@ public class OreData : MonoBehaviour
     public int maxHealth = 3;
     public GameObject miningFX;
 
+    [Header("Audio")]
+    public AudioClip hitSound;    // played every time the ore is hit
+    public AudioClip breakSound;  // played when the ore is destroyed
+
     [Header("Info UI")]
     [Tooltip("Info panel for this ore (panel object, not the canvas)")]
     public GameObject infoPanel;
@@ -35,6 +39,10 @@ public class OreData : MonoBehaviour
     {
         currentHealth--;
 
+        // Play hit sound
+        if (hitSound != null)
+            AudioSource.PlayClipAtPoint(hitSound, transform.position);
+
         if (miningFX != null)
             Instantiate(miningFX, transform.position, Quaternion.identity);
 
@@ -51,7 +59,13 @@ public class OreData : MonoBehaviour
 
         // Remove the ore once it's depleted
         if (currentHealth <= 0)
+        {
+            // Play break sound
+            if (breakSound != null)
+                AudioSource.PlayClipAtPoint(breakSound, transform.position);
+
             Destroy(gameObject);
+        }
     }
 
     void OpenInfo()

@@ -12,6 +12,9 @@ public class RaycastMiner : MonoBehaviour
     [Header("Player Reference")]
     public PlayerInventory playerInventory;
 
+    [Header("Audio")]
+    public AudioClip swingSound;      // played when clicking to mine
+
     private OreData currentOreTarget;
 
     void Start()
@@ -57,7 +60,13 @@ public class RaycastMiner : MonoBehaviour
                     return;
 
                 if (Input.GetMouseButtonDown(0))
+                {
+                    // Play swing sound
+                    if (swingSound != null)
+                        AudioSource.PlayClipAtPoint(swingSound, Camera.main.transform.position);
+
                     currentOreTarget.Mine();
+                }
             }
         }
     }

@@ -19,13 +19,34 @@ public class OreJournalButton : MonoBehaviour
 
     void Awake()
     {
+        // Make sure no old listeners are hanging around
+        if (button != null)
+            button.onClick.RemoveAllListeners();
+
+        // If this ore was discovered before this button's Awake ran don't reset it. (AI was used her to figure out an issue. i had an issue where whenever i mined the first ore it wouldnt pop up in the info page)
+        if (discovered)
+        {
+            // Re-apply discovered state visuals + click
+            if (label != null)
+                label.text = oreType.ToString();
+
+            if (button != null)
+            {
+                button.interactable = true;
+                button.onClick.AddListener(OpenInfoFromJournal);
+            }
+
+            return;
+        }
+
         // Locked by default
         discovered = false;
-        label.text = "?????";
-        button.interactable = false;
 
-        // Make sure no old listeners are hanging around
-        button.onClick.RemoveAllListeners();
+        if (label != null)
+            label.text = "?????";
+
+        if (button != null)
+            button.interactable = false;
     }
 
     // Called once when the ore is first discovered
@@ -35,11 +56,17 @@ public class OreJournalButton : MonoBehaviour
             return;
 
         discovered = true;
-        label.text = oreType.ToString();
-        button.interactable = true;
 
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(OpenInfoFromJournal);
+        if (label != null)
+            label.text = oreType.ToString();
+
+        if (button != null)
+        {
+            button.interactable = true;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(OpenInfoFromJournal);
+        }
     }
 
     // Opens the ore info panel from the journal

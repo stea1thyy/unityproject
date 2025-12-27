@@ -20,6 +20,10 @@ public class PlayerMovementController : MonoBehaviour
     public Transform planet;
     public float gravityStrength = 30f;
 
+    [Header("UI")]
+    public GameObject settingsCanvas;   
+
+    private bool settingsOpen = false;
     private bool isGrounded;
     private float verticalVelocity = 0f;
 
@@ -35,18 +39,25 @@ public class PlayerMovementController : MonoBehaviour
 
     void Update()
     {
-        // Journal key (always allowed)
+        // Journal key 
         if (_input.PlayerActionMap.Journal.WasPressedThisFrame())
         {
             OreJournalUI.Instance.Open();
             return;
         }
 
-        // Block movement while menus are open
+        // Settings key M 
+        if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame)
+        {
+            ToggleSettings();
+            return;
+        }
+
+        // Block movement while any UI is open
         if (PopUpManager.IsAnyUIAcive)
             return;
 
-        // Lock cursor during gameplay
+        // Lock cursor only during gameplay
         if (Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;
@@ -63,6 +74,30 @@ public class PlayerMovementController : MonoBehaviour
         Move(moveInput);
     }
 
+    // SETTINGS TOGGLE
+    void ToggleSettings()
+    {
+        if (settingsCanvas == null)
+            return;
+
+        settingsOpen = !settingsOpen;
+        settingsCanvas.SetActive(settingsOpen);
+
+        PopUpManager.IsAnyUIAcive = settingsOpen;
+
+        if (settingsOpen)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
+
+    // CAMERA LOOK
     void Look(Vector2 input)
     {
         // Yaw on player, pitch on camera
@@ -73,66 +108,60 @@ public class PlayerMovementController : MonoBehaviour
         cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
+    // GROUND CHECK
     void GroundCheck()
     {
-        // Planet-based up/down
         Vector3 up = (transform.position - planet.position).normalized;
         Vector3 down = -up;
 
-        // Match CharacterController shape
         float radius = cc.radius - 0.05f;
         Vector3 center = transform.position + cc.center;
 
         Vector3 p1 = center + up * (cc.height * 0.5f - radius);
         Vector3 p2 = center - up * (cc.height * 0.5f - radius);
 
-        // Small cast distance for stability
         isGrounded = Physics.CapsuleCast(p1, p2, radius, down, out _, 0.3f);
     }
 
+    // GRAVITY + JUMP
     void ApplyGravityAndJump()
     {
         Vector3 up = (transform.position - planet.position).normalized;
 
         if (isGrounded)
         {
-            // Stick to surface
             verticalVelocity = -2f;
 
-            // Jump away from planet
             if (_input.PlayerActionMap.Jump.WasPressedThisFrame())
                 verticalVelocity = -jumpForce * 0.7f;
         }
         else
         {
-            // Pull back toward planet
             verticalVelocity += gravityStrength * 0.6f * Time.deltaTime;
         }
     }
 
+    // MOVEMENT
     void Move(Vector2 input)
     {
         Vector3 up = (transform.position - planet.position).normalized;
 
-        // Keep movement tangent to the surface
         Vector3 forward = Vector3.ProjectOnPlane(transform.forward, up).normalized;
         Vector3 right = Vector3.ProjectOnPlane(transform.right, up).normalized;
 
         Vector3 move = (forward * input.y + right * input.x) * moveSpeed;
 
-        // Extra push down helps on slopes
         if (isGrounded)
             move += -up * 1.5f;
 
-        // Vertical handled separately
         Vector3 verticalMove = -up * verticalVelocity;
 
         cc.Move((move + verticalMove) * Time.deltaTime);
     }
 
+    // PLANET ALIGNMENT
     void AlignToPlanet()
     {
-        // Rotate player so feet point at planet
         Vector3 up = (transform.position - planet.position).normalized;
 
         Quaternion current = transform.rotation;

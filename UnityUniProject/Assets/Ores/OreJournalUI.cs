@@ -8,6 +8,11 @@ public class OreJournalUI : MonoBehaviour
     public GameObject oreJournalCanvas;
     public OreJournalButton[] journalButtons;
 
+    [Header("Audio")]
+    public AudioClip openSound;     // played when journal opens
+    public AudioClip closeSound;    // played when journal closes
+    public AudioClip discoverSound; // played when an ore is discovered
+
     private bool isOpen = false;
 
     void Awake()
@@ -37,6 +42,11 @@ public class OreJournalUI : MonoBehaviour
             if (button.oreType == type)
             {
                 button.Discover();
+
+                // Play discovery sound
+                if (discoverSound != null)
+                    AudioSource.PlayClipAtPoint(discoverSound, Camera.main.transform.position);
+
                 return;
             }
         }
@@ -50,6 +60,10 @@ public class OreJournalUI : MonoBehaviour
 
         PopUpManager.IsAnyUIAcive = true;
 
+        // Play open sound
+        if (openSound != null)
+            AudioSource.PlayClipAtPoint(openSound, Camera.main.transform.position);
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -61,6 +75,10 @@ public class OreJournalUI : MonoBehaviour
         isOpen = false;
 
         PopUpManager.IsAnyUIAcive = false;
+
+        // Play close sound
+        if (closeSound != null)
+            AudioSource.PlayClipAtPoint(closeSound, Camera.main.transform.position);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
